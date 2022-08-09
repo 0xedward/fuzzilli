@@ -53,7 +53,7 @@ Options:
     --minimizationLimit=p       : When minimizing interesting programs, keep at least this percentage of the original instructions
                                   regardless of whether they are needed to trigger the interesting behaviour or not.
                                   See Minimizer.swift for an overview of this feature (default: 0.0).
-    --storagePath=path          : Path at which to store output files (crashes, corpus, etc.) to.
+    --storagePath=path          : Path at which to store output files (crashes, corpus, etc.) to. (default: ./)
     --resume                    : If storage path exists, import the programs from the corpus/ subdirectory
     --overwrite                 : If storage path exists, delete all data in it and start a fresh fuzzing session
     --exportStatistics          : If enabled, fuzzing statistics will be collected and saved to disk every 10 minutes.
@@ -168,7 +168,7 @@ if markovDropoutRate < 0 || markovDropoutRate > 1 {
     print("The markovDropoutRate must be between 0 and 1")
 }
 
-if corpusName == "markov" && (args.int(for: "--maxCorpusSize") != nil || args.int(for: "--minCorpusSize") != nil 
+if corpusName == "markov" && (args.int(for: "--maxCorpusSize") != nil || args.int(for: "--minCorpusSize") != nil
     || args.int(for: "--minMutationsPerSample") != nil ) {
     configError("--maxCorpusSize, --minCorpusSize, --minMutationsPerSample are not compatible with the Markov corpus")
 }
@@ -545,7 +545,7 @@ fuzzer.sync {
         fuzzer.importCorpus(corpus, importMode: .interestingOnly(shouldMinimize: true))
         logger.info("Successfully imported \(path). Samples will be added to the corpus once they are minimized")
     }
-    
+
     // Import and merge an existing corpus if requested
     if let path = corpusImportMergePath {
         let corpus = loadCorpus(from: path)
