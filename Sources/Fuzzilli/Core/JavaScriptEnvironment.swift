@@ -68,7 +68,7 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
     private var groups: [String: ObjectGroup] = [:]
 
     public var constructables = [String]()
-    
+
     // Builtin objects (ObjectGroups to be precise) that are not constructors.
     public let nonConstructors = ["Math", "JSON", "Reflect"]
 
@@ -118,6 +118,7 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
         for variant in ["Error", "EvalError", "RangeError", "ReferenceError", "SyntaxError", "TypeError", "AggregateError"] {
             registerObjectGroup(.jsError(variant))
         }
+        registerObjectGroup(.jsSharedArrayBufferConstructor)
 
         for group in additionalObjectGroups {
             registerObjectGroup(group)
@@ -143,6 +144,7 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
         for variant in ["Uint8Array", "Int8Array", "Uint16Array", "Int16Array", "Uint32Array", "Int32Array", "Float32Array", "Float64Array", "Uint8ClampedArray"] {
             registerBuiltin(variant, ofType: .jsTypedArrayConstructor(variant))
         }
+        registerBuiltin("SharedArrayBuffer", ofType: .jsSharedArrayBufferConstructor)
         registerBuiltin("DataView", ofType: .jsDataViewConstructor)
         registerBuiltin("Date", ofType: .jsDateConstructor)
         registerBuiltin("Promise", ofType: .jsPromiseConstructor)
@@ -189,7 +191,7 @@ public class JavaScriptEnvironment: ComponentBase, Environment {
                 constructables.append(group)
             }
         }
-        
+
         customPropertyNames = ["a", "b", "c", "d", "e"]
         customMethodNames = ["m", "n", "o", "p"]
         methodNames.formUnion(customMethodNames)
@@ -376,7 +378,7 @@ public extension Type {
     static func jsError(_ variant: String) -> Type {
        return .object(ofGroup: variant, withProperties: ["constructor", "__proto__", "message", "name"], withMethods: ["toString"])
     }
-    
+
     /// Type of the JavaScript Error constructor builtin
     static func jsErrorConstructor(_ variant: String) -> Type {
         return .functionAndConstructor([.opt(.string)] => .jsError(variant))
@@ -384,6 +386,11 @@ public extension Type {
 
     /// Type of the JavaScript ArrayBuffer constructor builtin.
     static let jsArrayBufferConstructor = Type.constructor([.plain(.integer)] => .jsArrayBuffer) + .object(ofGroup: "ArrayBufferConstructor", withProperties: ["prototype"], withMethods: ["isView"])
+
+    /// Type of the JavaScript SharedArrayBuffer constructor builtin.
+    // TODO supposed to be a non-negative int - https://tc39.es/ecma262/multipage/structured-data.html#sec-sharedarraybuffer-objects
+    // but .integer seems to call genInt() in programbuilder which does generate negative integers - do we want to focus on correctness or generate negative ints since it might be interesting how js engines handle this
+    static let jsSharedArrayBufferConstructor = Type.constructor([.plain(.integer)] => .jsSharedArrayBuffer) + .object(ofGroup: "SharedArrayBuffer", withProperties: ["prototype", "byteLength", "constructor"], withMethods: ["slice"])
 
     /// Type of a JavaScript TypedArray constructor builtin.
     static func jsTypedArrayConstructor(_ variant: String) -> Type {
@@ -413,7 +420,7 @@ public extension Type {
 
     /// Type of the JavaScript Math constructor builtin.
     static let jsMathObject = Type.object(ofGroup: "Math", withProperties: ["E", "PI"], withMethods: ["abs", "acos", "acosh", "asin", "asinh", "atan", "atanh", "atan2", "ceil", "cbrt", "expm1", "clz32", "cos", "cosh", "exp", "floor", "fround", "hypot", "imul", "log", "log1p", "log2", "log10", "max", "min", "pow", "random", "round", "sign", "sin", "sinh", "sqrt", "tan", "tanh", "trunc"])
-    
+
     /// Type of the JavaScript Date object
     static let jsDate = Type.object(ofGroup: "Date", withProperties: ["__proto__", "constructor"], withMethods: ["toISOString", "toDateString", "toTimeString", "toLocaleString", "getTime", "getFullYear", "getUTCFullYear", "getMonth", "getUTCMonth", "getDate", "getUTCDate", "getDay", "getUTCDay", "getHours", "getUTCHours", "getMinutes", "getUTCMinutes", "getSeconds", "getUTCSeconds", "getMilliseconds", "getUTCMilliseconds", "getTimezoneOffset", "getYear", "setTime", "setMilliseconds", "setUTCMilliseconds", "setSeconds", "setUTCSeconds", "setMinutes", "setUTCMinutes", "setHours", "setUTCHours", "setDate", "setUTCDate", "setMonth", "setUTCMonth", "setFullYear", "setUTCFullYear", "setYear", "toJSON", "toUTCString", "toGMTString"])
 
@@ -722,6 +729,18 @@ public extension ObjectGroup {
         methods: [
             "slice" : [.plain(.integer), .opt(.integer)] => .jsArrayBuffer,
             "resize" : [.plain(.integer)] => .undefined,
+        ]
+    )
+    /// ObjectGroup modelling JavaScript ArrayBuffer objects
+    static let jsSharedArrayBuffers = ObjectGroup(
+        name: "SharedArrayBuffer",
+        instanceType: .jsSharedArrayBuffer,
+        properties: [
+            "__proto__"  : .object(),
+            "byteLength" : .integer
+        ],
+        methods: [
+            "slice" : [.plain(.integer), .opt(.integer)] => .jsSharedArrayBuffer,
         ]
     )
 
