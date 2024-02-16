@@ -119,6 +119,7 @@ if args["-h"] != nil || args["--help"] != nil || args.numPositionalArguments != 
               --checkCorpus          : Attempts to load all .fzil files in a directory and checks if they are statically valid
               --compile              : Compile the given JavaScript program to a FuzzIL program. Requires node.js
               --generate             : Generate a random program using Fuzzilli's code generators and save it to the specified path.
+              --profile              : TODO
           """)
     exit(0)
 }

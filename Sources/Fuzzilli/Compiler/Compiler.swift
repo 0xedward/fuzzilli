@@ -13,6 +13,8 @@
 // limitations under the License.
 
 import Foundation
+// import Profiles
+import FuzzilliCli
 
 /// Compiles a JavaScript AST into a FuzzIL program.
 public class JavaScriptCompiler {
@@ -27,8 +29,16 @@ public class JavaScriptCompiler {
         case unsupportedFeatureError(String)
     }
 
-    public init(deletingCallTo filteredFunctions: [String] = []) {
+    public init(deletingCallTo filteredFunctions: [String] = [], targetProfile: Profile! = nil) {
         self.filteredFunctions = filteredFunctions
+        // self.targetProfile = targetProfile
+        // TODO need to move FuzzilliCLi/Profiles/Profile.swift into Fuzzilli/ dir so that Profile can be imported here
+        if (targetProfile != nil) {
+            environment = JavaScriptEnvironment(additionalBuiltins: targetProfile.additionalBuiltins)
+        } else {
+            /// No profile specified, but most targets will have `gc` as a builtin.
+            environment = JavaScriptEnvironment(additionalBuiltins: ["gc": .function()])
+        }
     }
 
     /// The compiled code.
@@ -43,9 +53,11 @@ public class JavaScriptCompiler {
     /// a prefix match will be performed instead of a string comparison.
     private let filteredFunctions: [String]
 
+    // The profile to use when compiling JS to FuzzIL programs
+    // private let targetProfile: Profile?
+
     /// The environment is used to determine if an identifier identifies a builtin object.
-    /// TODO we should probably use the correct target environment, with any additional builtins etc. here. But for now, we just manually add `gc` since that's relatively common.
-    private var environment = JavaScriptEnvironment(additionalBuiltins: ["gc": .function()])
+    private var environment: JavaScriptEnvironment
 
     /// Contains the mapping from JavaScript variables to FuzzIL variables in every active scope.
     private var scopes = Stack<[String: Variable]>()

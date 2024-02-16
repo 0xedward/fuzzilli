@@ -44,7 +44,9 @@ let package = Package(
                     .product(name: "SwiftProtobuf", package: "swift-protobuf"),
                     "libsocket",
                     "libreprl",
-                    "libcoverage"],
+                    "libcoverage",
+                    // "FuzzilliCli"
+                    ],
                 exclude: [
                     "Protobuf/operations.proto",
                     "Protobuf/program.proto",
@@ -54,7 +56,9 @@ let package = Package(
                 resources: [
                     // The ast.proto file is required by the node.js parser
                     .copy("Protobuf/ast.proto"),
-                    .copy("Compiler/Parser")]),
+                    .copy("Compiler/Parser"),
+                    // .copy("Compiler/Parser")]),
+                    .copy("FuzzilliCli/Profiles/Profile.swift")]),
 
         .target(name: "REPRLRun",
                 dependencies: ["libreprl"]),

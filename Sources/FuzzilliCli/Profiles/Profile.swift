@@ -14,7 +14,7 @@
 
 import Fuzzilli
 
-struct Profile {
+public struct Profile {
     let processArgs: (_ randomize: Bool) -> [String]
     let processEnv: [String : String]
     let maxExecsBeforeRespawn: Int
